@@ -6,11 +6,15 @@ import (
 )
 
 type Config struct {
-	Words     []string
-	BoardSize int
-	BoardNRow int
-	BoardNCol int
-	NTeams    int
+	Words              []string
+	BoardSize          int
+	BoardNRow          int
+	BoardNCol          int
+	NTeams             int
+	NGuessStartingTeam int
+	NGuessOtherTeams   int
+	NGuessTotal        int
+	NDeath             int
 }
 
 var Configuration Config
@@ -27,4 +31,8 @@ func initWords() {
 	Configuration.BoardNCol = 5
 	Configuration.NTeams = 2
 	Configuration.BoardSize = Configuration.BoardNRow * Configuration.BoardNCol
+	Configuration.NGuessStartingTeam = 9
+	Configuration.NGuessOtherTeams = 8
+	Configuration.NGuessTotal = Configuration.NGuessStartingTeam + Configuration.NGuessOtherTeams
+	Configuration.NDeath = 1
 }

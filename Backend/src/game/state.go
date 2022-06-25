@@ -13,30 +13,41 @@ import (
 type GameState struct {
 	GameID    uuid.UUID
 	ClientIDs []uint32
-	NGuess    int
 	CurrTeam  enum.Team
+	NGuess    int               // The number of guesses the current team has left
+	Remains   map[enum.Team]int // The number of cards remaining for each team
 	Board     Board
 }
 
 func NewGame() GameState {
 	newUuid := uuid.New()
 	board, startingTeam := generateBoard()
-
-	// for _, col := range board.Cells {
-	// 	for _, cell := range col {
-	// 		fmt.Print(cell.String() + " ")
-	// 	}
-	// 	fmt.Println("")
-	// }
+	remains := make(map[enum.Team](int))
+	remains[startingTeam] = config.Configuration.NGuessStartingTeam
+	remains[startingTeam.Opposite()] = config.Configuration.NGuessOtherTeams
 
 	gameState := GameState{
 		GameID:    newUuid,
 		ClientIDs: make([]uint32, 0),
-		NGuess:    -1,
 		CurrTeam:  startingTeam,
+		NGuess:    -1,
+		Remains:   remains,
 		Board:     board,
 	}
 	return gameState
+}
+
+func (gs *GameState) Guess(row int, col int, team enum.Team) {
+	logger.Debugf("Guessing cell: %v, %v for Game: %v", row, col, gs.GameID)
+	cell := &gs.Board.Cells[row][col]
+	cell.guessed = true
+	if cell.team == team {
+		// TODO: A lot of work to be done, need to define a bunch of handlers
+		// Correct guess
+		gs.NGuess -= 1
+		gs.Remains[team] -= 1
+
+	}
 }
 
 // Returns board object and starting team
@@ -74,11 +85,11 @@ func generateBoard() (Board, enum.Team) {
 	// Decide starting startingTeam
 	startingTeam := enum.Team(rand.Intn(config.Configuration.NTeams))
 	// Decide on 9 words for starting team
-	assignTeamToCells(9, cellGrid, startingTeam)
+	assignTeamToCells(config.Configuration.NGuessStartingTeam, cellGrid, startingTeam)
 	// Decide on 8 words for other team
-	assignTeamToCells(8, cellGrid, startingTeam.Opposite())
+	assignTeamToCells(config.Configuration.NGuessOtherTeams, cellGrid, startingTeam.Opposite())
 	// Decide on Death word
-	assignTeamToCells(1, cellGrid, enum.DEATH_TEAM)
+	assignTeamToCells(config.Configuration.NDeath, cellGrid, enum.DEATH_TEAM)
 
 	board := Board{Cells: cellGrid}
 	logger.Debug(board.String())
