@@ -3,14 +3,15 @@ package game
 import (
 	"math/rand"
 
-	"github.com/CayenneLow/Codenames/src/config"
-	"github.com/CayenneLow/Codenames/src/game/enum"
-	"github.com/CayenneLow/Codenames/src/logger"
+	"github.com/CayenneLow/Codenames/internal/config"
+	"github.com/CayenneLow/Codenames/internal/game/enum"
 	"github.com/google/uuid"
 	"github.com/meirf/gopart"
+	logger "github.com/sirupsen/logrus"
 )
 
 type GameState struct {
+	Config    config.Config
 	GameID    uuid.UUID
 	ClientIDs []uint32
 	CurrTeam  enum.Team
@@ -19,14 +20,15 @@ type GameState struct {
 	Board     Board
 }
 
-func NewGame() GameState {
+func NewGame(cfg config.Config) GameState {
 	newUuid := uuid.New()
-	board, startingTeam := generateBoard()
+	board, startingTeam := generateBoard(cfg)
 	remains := make(map[enum.Team](int))
-	remains[startingTeam] = config.Configuration.NGuessStartingTeam
-	remains[startingTeam.Opposite()] = config.Configuration.NGuessOtherTeams
+	remains[startingTeam] = cfg.NGuessStartingTeam
+	remains[startingTeam.Opposite()] = cfg.NGuessOtherTeams
 
 	gameState := GameState{
+		Config:    cfg,
 		GameID:    newUuid,
 		ClientIDs: make([]uint32, 0),
 		CurrTeam:  startingTeam,
@@ -51,19 +53,19 @@ func (gs *GameState) Guess(row int, col int, team enum.Team) {
 }
 
 // Returns board object and starting team
-func generateBoard() (Board, enum.Team) {
+func generateBoard(cfg config.Config) (Board, enum.Team) {
 	// Get 25 words
 	wordIndexes := make(map[string]bool) // a map so this operation can remain O(n), value is not used
-	for len(wordIndexes) < config.Configuration.BoardSize {
-		num := rand.Intn(len(config.Configuration.Words))
-		word := config.Configuration.Words[num]
+	for len(wordIndexes) < cfg.BoardSize {
+		num := rand.Intn(len(cfg.Words))
+		word := cfg.Words[num]
 		if _, ok := wordIndexes[word]; !ok {
 			// word doesn't exist, insert new entry
 			wordIndexes[word] = true // we don't care about value
 		}
 	}
 	// Map to Cells
-	cells := make([]Cell, config.Configuration.BoardSize)
+	cells := make([]Cell, cfg.BoardSize)
 	i := 0
 	for key := range wordIndexes {
 		cell := Cell{
@@ -75,31 +77,31 @@ func generateBoard() (Board, enum.Team) {
 		i++
 	}
 	// Partition into BoardNRow x BoardNCol
-	cellGrid := make([][]Cell, config.Configuration.BoardNRow)
+	cellGrid := make([][]Cell, cfg.BoardNRow)
 	i = 0
-	for idx := range gopart.Partition(len(cells), config.Configuration.BoardNCol) {
+	for idx := range gopart.Partition(len(cells), cfg.BoardNCol) {
 		cellGrid[i] = cells[idx.Low:idx.High]
 		i++
 	}
 
 	// Decide starting startingTeam
-	startingTeam := enum.Team(rand.Intn(config.Configuration.NTeams))
+	startingTeam := enum.Team(rand.Intn(cfg.NTeams))
 	// Decide on 9 words for starting team
-	assignTeamToCells(config.Configuration.NGuessStartingTeam, cellGrid, startingTeam)
+	assignTeamToCells(cfg, cfg.NGuessStartingTeam, cellGrid, startingTeam)
 	// Decide on 8 words for other team
-	assignTeamToCells(config.Configuration.NGuessOtherTeams, cellGrid, startingTeam.Opposite())
+	assignTeamToCells(cfg, cfg.NGuessOtherTeams, cellGrid, startingTeam.Opposite())
 	// Decide on Death word
-	assignTeamToCells(config.Configuration.NDeath, cellGrid, enum.DEATH_TEAM)
+	assignTeamToCells(cfg, cfg.NDeath, cellGrid, enum.DEATH_TEAM)
 
 	board := Board{Cells: cellGrid}
 	logger.Debug(board.String())
 	return board, startingTeam
 }
 
-func assignTeamToCells(nWords int, cellGrid [][]Cell, team enum.Team) {
+func assignTeamToCells(cfg config.Config, nWords int, cellGrid [][]Cell, team enum.Team) {
 	i := 0
 	for i < nWords {
-		cellRow, cellCol := getRandCell()
+		cellRow, cellCol := getRandCell(cfg)
 		if cellGrid[cellRow][cellCol].team == enum.NEUTRAL_TEAM {
 			cellGrid[cellRow][cellCol].team = team
 			i++
@@ -107,8 +109,8 @@ func assignTeamToCells(nWords int, cellGrid [][]Cell, team enum.Team) {
 	}
 }
 
-func getRandCell() (int, int) {
-	cellRow := rand.Intn(config.Configuration.BoardNRow)
-	cellCol := rand.Intn(config.Configuration.BoardNCol)
+func getRandCell(cfg config.Config) (int, int) {
+	cellRow := rand.Intn(cfg.BoardNRow)
+	cellCol := rand.Intn(cfg.BoardNCol)
 	return cellRow, cellCol
 }

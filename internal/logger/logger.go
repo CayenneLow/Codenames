@@ -3,22 +3,23 @@ package logger
 import (
 	"os"
 
-	"github.com/sirupsen/logrus"
+	logger "github.com/sirupsen/logrus"
 )
 
-var logger = logrus.New()
-
-func Init() {
-	logger.Out = os.Stdout
-	logger.SetLevel(logrus.DebugLevel)
-	logger.SetFormatter(&logrus.TextFormatter{
+func Init(logLevel string) {
+	logger.SetOutput(os.Stdout)
+	lvl, err := logger.ParseLevel(logLevel)
+	if err != nil {
+		logger.Fatalf("Unable to parse log level: %s. %s", logLevel, err)
+	}
+	logger.SetLevel(lvl)
+	logger.SetFormatter(&logger.TextFormatter{
 		DisableQuote: true,
 	})
-	logger.Info("Logger Initialized")
+	logger.Infof("Logger Initialized with log level:%s", logger.GetLevel())
 }
 
 func Debug(args ...interface{}) {
-	logger.Out = os.Stdout
 	logger.Debug(args...)
 }
 

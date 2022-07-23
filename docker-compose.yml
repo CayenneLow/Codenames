@@ -1,0 +1,20 @@
+# Run app locally
+
+version: "3.9"
+
+services:
+  server:
+    container_name: server
+    command: "./bin/start_server"
+    ports:
+      - "9000:8080"
+    env_file:
+      - .envrc
+    environment:
+      WORD_FILEPATH: "/codenames/words.txt"
+    build:
+      dockerfile: Dockerfile
+      context: .    
+    volumes:
+      - ./internal/config/words.txt:/codenames/words.txt:ro
+    restart: always

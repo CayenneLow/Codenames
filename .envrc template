@@ -1,0 +1,10 @@
+# LOCAL
+export WORD_FILEPATH="./internal/config/words.txt"
+export BOARD_N_ROW=5
+export BOARD_N_COL=5
+export N_TEAMS=2
+export BOARD_SIZE=25
+export N_GUESS_STARTING_TEAM=9
+export N_GUESS_OTHER_TEAM=8
+export N_GUESS_TOTAL=17
+export N_DEATH=1

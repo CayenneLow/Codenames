@@ -3,7 +3,7 @@ package game
 import (
 	"fmt"
 
-	"github.com/CayenneLow/Codenames/src/game/enum"
+	"github.com/CayenneLow/Codenames/internal/game/enum"
 )
 
 type Cell struct {

@@ -1,28 +1,25 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
-	"github.com/CayenneLow/Codenames/src/config"
-	"github.com/CayenneLow/Codenames/src/game"
-	"github.com/CayenneLow/Codenames/src/logger"
+	"github.com/CayenneLow/Codenames/internal/config"
+	"github.com/CayenneLow/Codenames/internal/game"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 )
 
 func main() {
-	config.Init()
-	logger.Init()
+	cfg := config.Init()
 	games := make(map[uuid.UUID]game.GameState)
 
 	http.HandleFunc("/newgame", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(r.URL.Query())
-		newGame := game.NewGame()
+		log.Debug(r.URL.Query())
+		newGame := game.NewGame(cfg)
 		games[newGame.GameID] = newGame
 	})
 
-	fmt.Printf("Starting server at port 8080\n")
+	log.Info("Starting server at port 8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)
 	}
