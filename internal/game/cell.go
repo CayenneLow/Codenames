@@ -7,11 +7,11 @@ import (
 )
 
 type Cell struct {
-	word    string
-	team    enum.Team
-	guessed bool
+	Word    string    `json:"word"`
+	Team    enum.Team `json:"team"`
+	Guessed bool      `json:"guessed"`
 }
 
 func (c Cell) String() string {
-	return fmt.Sprintf("%10s (%7s)", c.word, c.team.String())
+	return fmt.Sprintf("%10s (%7s)", c.Word, c.Team.String())
 }

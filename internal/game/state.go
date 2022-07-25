@@ -8,7 +8,7 @@ import (
 	"github.com/CayenneLow/Codenames/internal/game/enum"
 	"github.com/google/uuid"
 	"github.com/meirf/gopart"
-	logger "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 type GameState struct {
@@ -46,10 +46,10 @@ func newGameId() string {
 }
 
 func (gs *GameState) Guess(row int, col int, team enum.Team) {
-	logger.Debugf("Guessing cell: %v, %v for Game: %v", row, col, gs.GameID)
+	log.Debugf("Guessing cell: %v, %v for Game: %v", row, col, gs.GameID)
 	cell := &gs.Board.Cells[row][col]
-	cell.guessed = true
-	if cell.team == team {
+	cell.Guessed = true
+	if cell.Team == team {
 		// TODO: A lot of work to be done, need to define a bunch of handlers
 		// Correct guess
 		gs.NGuess -= 1
@@ -75,9 +75,9 @@ func generateBoard(cfg config.Config) (Board, enum.Team) {
 	i := 0
 	for key := range wordIndexes {
 		cell := Cell{
-			word:    key,
-			team:    enum.NEUTRAL_TEAM,
-			guessed: false,
+			Word:    key,
+			Team:    enum.NEUTRAL_TEAM,
+			Guessed: false,
 		}
 		cells[i] = cell
 		i++
@@ -100,7 +100,6 @@ func generateBoard(cfg config.Config) (Board, enum.Team) {
 	assignTeamToCells(cfg, cfg.NDeath, cellGrid, enum.DEATH_TEAM)
 
 	board := Board{Cells: cellGrid}
-	logger.Debug(board.String())
 	return board, startingTeam
 }
 
@@ -108,8 +107,8 @@ func assignTeamToCells(cfg config.Config, nWords int, cellGrid [][]Cell, team en
 	i := 0
 	for i < nWords {
 		cellRow, cellCol := getRandCell(cfg)
-		if cellGrid[cellRow][cellCol].team == enum.NEUTRAL_TEAM {
-			cellGrid[cellRow][cellCol].team = team
+		if cellGrid[cellRow][cellCol].Team == enum.NEUTRAL_TEAM {
+			cellGrid[cellRow][cellCol].Team = team
 			i++
 		}
 	}

@@ -1,0 +1,2 @@
+SET INTT1 '{"cells":[[{"word":"1x1","team":1,"guessed":false},{"word":"1x2","team":0,"guessed":false}],[{"word":"2x1","team":1,"guessed":false},{"word":"2x2","team":0,"guessed":false}]]}'
+SET INTT2 '{"cells":[[{"word":"1x1","team":0,"guessed":false},{"word":"1x2","team":1,"guessed":false}],[{"word":"2x1","team":0,"guessed":false},{"word":"2x2","team":1,"guessed":false}]]}'

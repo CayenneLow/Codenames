@@ -67,6 +67,10 @@ func Start(cfg config.Config) {
 		log.Debug(r.URL.Query())
 		newGame := game.NewGame(cfg)
 		games[newGame.GameID] = newGame
+		log.Debug("Created new Game", log.Fields{
+			"GameID":    newGame.GameID,
+			"GameBoard": newGame.Board.String(),
+		})
 		_, err := w.Write([]byte(newGame.GameID))
 		if err != nil {
 			log.Error("Error responding to request to /newgame", log.Fields{

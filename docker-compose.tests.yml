@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  server_integration_test:
+    container_name: server_integration_test
+    command: "go test -timeout 10s -v -cover ./..."
+    ports:
+      - "9001:8080"
+    env_file:
+      - .envrc
+    environment:
+      DB_URI: "redis:6379"
+      EVENT_ROUTER_URL: "host.docker.internal:8080"
+      WORD_FILEPATH: "/codenames/words.txt"
+    build:
+      dockerfile: Dockerfile
+      context: .    
+    volumes:
+      - ./internal/config/words.txt:/codenames/words.txt:ro
+    restart: always
+    depends_on:
+      - redis
+      - redis-insight
+
+  redis:
+    image: redis:7.0.4-alpine
+    restart: always
+    ports:
+      - "16379:6379"
+
+  redis-insight:
+    image: redislabs/redisinsight:latest
+    restart: always
+    ports:
+      - "18001:8001"
+
+  init-redis:
+    depends_on:
+      - redis
+    image: redis:7.0.4-alpine
+    restart: "no"
+    volumes: 
+      - ./internal/db/init_test/:/init_test/:ro
+    command: sh -c "cat /init_test/test_data.txt | redis-cli -h redis -p 6379 --pipe"
