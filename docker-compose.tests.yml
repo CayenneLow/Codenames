@@ -40,5 +40,5 @@ services:
     image: redis:7.0.4-alpine
     restart: "no"
     volumes: 
-      - ./internal/db/init_test/:/init_test/:ro
+      - ./internal/database/init_test/:/init_test/:ro
     command: sh -c "cat /init_test/test_data.txt | redis-cli -h redis -p 6379 --pipe"

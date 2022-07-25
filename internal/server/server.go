@@ -8,15 +8,16 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/CayenneLow/Codenames/internal/config"
+	"github.com/CayenneLow/Codenames/internal/database"
 	"github.com/CayenneLow/Codenames/internal/game"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 )
 
-func Start(cfg config.Config) {
-	games := make(map[string](game.GameState))
+func Start(cfg config.Config, db database.Database) {
 
 	// Init connection to EventRouter
 	ws, err := connectToEventRouter(cfg)
@@ -28,7 +29,7 @@ func Start(cfg config.Config) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go func(ctx context.Context, games map[string](game.GameState)) {
+	go func(ctx context.Context) {
 		defer ws.Close()
 		for {
 			select {
@@ -48,7 +49,7 @@ func Start(cfg config.Config) {
 				"msg": message,
 			})
 		}
-	}(ctx, games)
+	}(ctx)
 
 	// Exit on SIGTERM and Interrupt
 	signalChannel := make(chan os.Signal, 2)
@@ -66,12 +67,28 @@ func Start(cfg config.Config) {
 	http.HandleFunc("/newgame", func(w http.ResponseWriter, r *http.Request) {
 		log.Debug(r.URL.Query())
 		newGame := game.NewGame(cfg)
-		games[newGame.GameID] = newGame
+		// Save to DB
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		err := db.Insert(ctx, newGame.GameID, newGame.Board)
+		if err != nil {
+			j, err := newGame.Board.Json()
+			if err != nil {
+				log.Error("Error convering GameBoard to JSON", log.Fields{
+					"GameID": newGame.GameID,
+					"Board":  newGame.Board.String(),
+				})
+			}
+			log.Error("Error writing GameBoard to DB", log.Fields{
+				"GameID": newGame.GameID,
+				"Board":  j,
+			})
+		}
 		log.Debug("Created new Game", log.Fields{
 			"GameID":    newGame.GameID,
 			"GameBoard": newGame.Board.String(),
 		})
-		_, err := w.Write([]byte(newGame.GameID))
+		_, err = w.Write([]byte(newGame.GameID))
 		if err != nil {
 			log.Error("Error responding to request to /newgame", log.Fields{
 				"error": err,
