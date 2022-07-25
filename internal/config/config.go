@@ -11,8 +11,12 @@ import (
 )
 
 type Config struct {
+	EventRouterURL string `envconfig:"EVENT_ROUTER_URL" default:"localhost:8080"`
+	ServerPort     int    `envconfig:"SERVER_PORT" default:"8080"`
+	LogLevel       string `envconfig:"LOG_LEVEL" default:"INFO"`
+
+	// Game Configs
 	Words              []string
-	LogLevel           string `envconfig:"LOG_LEVEL" default:"INFO"`
 	Wordfilepath       string `envconfig:"WORD_FILEPATH"`
 	BoardSize          int    `envconfig:"BOARD_SIZE"`
 	BoardNRow          int    `envconfig:"BOARD_N_ROW"`
@@ -27,7 +31,7 @@ type Config struct {
 func Init() Config {
 	cfg := Config{}
 	// Initialize ENV
-	err := envconfig.Process("codenames-router", &cfg)
+	err := envconfig.Process("", &cfg)
 	initWords(&cfg)
 	// Initialize logger
 	logger.Init(cfg.LogLevel)

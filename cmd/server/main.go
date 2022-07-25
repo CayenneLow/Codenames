@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/CayenneLow/Codenames/internal/config"
@@ -19,8 +20,8 @@ func main() {
 		games[newGame.GameID] = newGame
 	})
 
-	log.Info("Starting server at port 8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	log.Infof("Starting server at port %s", cfg.ServerPort)
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.ServerPort), nil); err != nil {
 		log.Fatal(err)
 	}
 }
