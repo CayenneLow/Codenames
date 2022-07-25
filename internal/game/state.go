@@ -2,6 +2,7 @@ package game
 
 import (
 	"math/rand"
+	"strings"
 
 	"github.com/CayenneLow/Codenames/internal/config"
 	"github.com/CayenneLow/Codenames/internal/game/enum"
@@ -12,7 +13,7 @@ import (
 
 type GameState struct {
 	Config    config.Config
-	GameID    uuid.UUID
+	GameID    string
 	ClientIDs []uint32
 	CurrTeam  enum.Team
 	NGuess    int               // The number of guesses the current team has left
@@ -21,7 +22,6 @@ type GameState struct {
 }
 
 func NewGame(cfg config.Config) GameState {
-	newUuid := uuid.New()
 	board, startingTeam := generateBoard(cfg)
 	remains := make(map[enum.Team](int))
 	remains[startingTeam] = cfg.NGuessStartingTeam
@@ -29,7 +29,7 @@ func NewGame(cfg config.Config) GameState {
 
 	gameState := GameState{
 		Config:    cfg,
-		GameID:    newUuid,
+		GameID:    newGameId(),
 		ClientIDs: make([]uint32, 0),
 		CurrTeam:  startingTeam,
 		NGuess:    -1,
@@ -37,6 +37,12 @@ func NewGame(cfg config.Config) GameState {
 		Board:     board,
 	}
 	return gameState
+}
+
+func newGameId() string {
+	newUuid := uuid.NewString()
+	gameID := strings.ToUpper(newUuid[:5])
+	return gameID
 }
 
 func (gs *GameState) Guess(row int, col int, team enum.Team) {

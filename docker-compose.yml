@@ -11,6 +11,7 @@ services:
     env_file:
       - .envrc
     environment:
+      EVENT_ROUTER_URL: "host.docker.internal:8080"
       WORD_FILEPATH: "/codenames/words.txt"
     build:
       dockerfile: Dockerfile
