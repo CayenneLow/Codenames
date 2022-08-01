@@ -24,7 +24,7 @@ func Init(ctx context.Context, cfg config.Config) Database {
 	client := redis.NewClient(&redis.Options{
 		Addr:     cfg.DbURI,
 		Password: "",
-		DB:       0,
+		DB:       cfg.DbIndex,
 	})
 
 	db := database{

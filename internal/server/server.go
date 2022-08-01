@@ -13,11 +13,14 @@ import (
 	"github.com/CayenneLow/Codenames/internal/config"
 	"github.com/CayenneLow/Codenames/internal/database"
 	"github.com/CayenneLow/Codenames/internal/game"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 )
 
 func Start(cfg config.Config, db database.Database) {
+	// Create session ID
+	sessionID := uuid.NewString()
 
 	// Init connection to EventRouter
 	ws, err := connectToEventRouter(cfg)
@@ -27,6 +30,7 @@ func Start(cfg config.Config, db database.Database) {
 		})
 	}
 
+	// Read websocket loop
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go func(ctx context.Context) {
@@ -64,6 +68,7 @@ func Start(cfg config.Config, db database.Database) {
 		}
 	}()
 
+	// REST API Server for handling new game
 	http.HandleFunc("/newgame", func(w http.ResponseWriter, r *http.Request) {
 		log.Debug(r.URL.Query())
 		newGame := game.NewGame(cfg)
@@ -75,19 +80,46 @@ func Start(cfg config.Config, db database.Database) {
 			j, err := newGame.Board.Json()
 			if err != nil {
 				log.Error("Error convering GameBoard to JSON", log.Fields{
-					"GameID": newGame.GameID,
+					"gameID": newGame.GameID,
 					"Board":  newGame.Board.String(),
+					"error":  err,
 				})
 			}
 			log.Error("Error writing GameBoard to DB", log.Fields{
-				"GameID": newGame.GameID,
+				"gameID": newGame.GameID,
 				"Board":  j,
+				"error":  err,
 			})
 		}
 		log.Debug("Created new Game", log.Fields{
-			"GameID":    newGame.GameID,
+			"gameID":    newGame.GameID,
 			"GameBoard": newGame.Board.String(),
 		})
+		// Send joinGame event to EventRouter
+		joinGameEvent := fmt.Sprintf(`{
+			"type": "joinGame",
+			"gameID": "%s",
+			"sessionID": "%s",
+			"timestamp": %d,
+			"payload": {
+				"status": "",
+				"message": {
+					"clientType": "server"
+				}
+			}
+		}`, newGame.GameID, sessionID, time.Now().Unix())
+		log.Debug("Writing joinGame event to EventRouter", log.Fields{
+			"event": joinGameEvent,
+		})
+		err = ws.WriteMessage(websocket.TextMessage, []byte(joinGameEvent))
+		if err != nil {
+			log.Error("Error writing joinGame event to EventRouter", log.Fields{
+				"gameID": newGame.GameID,
+				"error":  err,
+			})
+		}
+
+		// Send response
 		_, err = w.Write([]byte(newGame.GameID))
 		if err != nil {
 			log.Error("Error responding to request to /newgame", log.Fields{

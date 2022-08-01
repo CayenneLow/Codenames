@@ -13,6 +13,7 @@ import (
 type Config struct {
 	DbURI          string `envconfig:"DB_URI" default:"redis:6379"`
 	DbName         string `envconfig:"DB_NAME" default:"codenames"`
+	DbIndex        int    `envconfig:"DB_INDEX" default:"1"`
 	EventRouterURL string `envconfig:"EVENT_ROUTER_URL" default:"localhost:8080"`
 	ServerPort     int    `envconfig:"SERVER_PORT" default:"8080"`
 	LogLevel       string `envconfig:"LOG_LEVEL" default:"INFO"`
