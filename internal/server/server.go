@@ -52,6 +52,9 @@ func Start(cfg config.Config, db database.Database) {
 			log.Debug("Received message from EventRouter WS", log.Fields{
 				"msg": message,
 			})
+			ctxTO, cancel := context.WithTimeout(context.Background(), time.Second*5)
+			defer cancel()
+			HandleWsMessage(ctxTO, message, ws, db)
 		}
 	}(ctx)
 
