@@ -25,18 +25,19 @@ func (suite *TestSuite) SetupTest() {
 
 func (suite *TestSuite) TestInsert() {
 	mockGameID := "INTT3"
-	mockData := `{"cells":[[{"word":"1x1","team":1,"guessed":false},{"word":"1x2","team":1,"guessed":false}],[{"word":"2x1","team":0,"guessed":false},{"word":"2x2","team":0,"guessed":false}]]}`
+	mockData := `{"cells":[[{"word":"1x1","team":"BLUE","guessed":false},{"word":"1x2","team":"BLUE","guessed":false}],[{"word":"2x1","team":"RED","guessed":false},{"word":"2x2","team":"RED","guessed":false}]]}`
 	mockDataStruct, err := game.FromJson([]byte(mockData))
 	assert.NoError(suite.T(), err)
 	err = suite.db.Insert(suite.ctx, mockGameID, mockDataStruct)
 	assert.NoError(suite.T(), err)
 
 	actualBoard, err := suite.db.ReadBoardByGameID(suite.ctx, mockGameID)
+	assert.NoError(suite.T(), err)
 	assert.Equal(suite.T(), mockDataStruct, actualBoard)
 }
 
 func (suite *TestSuite) TestReadBoardByGameID() {
-	expectedJson := `{"cells":[[{"word":"1x1","team":1,"guessed":false},{"word":"1x2","team":0,"guessed":false}],[{"word":"2x1","team":1,"guessed":false},{"word":"2x2","team":0,"guessed":false}]]}`
+	expectedJson := `{"cells":[[{"word":"1x1","team":"BLUE","guessed":false},{"word":"1x2","team":"RED","guessed":false}],[{"word":"2x1","team":"BLUE","guessed":false},{"word":"2x2","team":"RED","guessed":false}]]}`
 	expectedDataStruct, err := game.FromJson([]byte(expectedJson))
 	assert.NoError(suite.T(), err)
 	actual, err := suite.db.ReadBoardByGameID(suite.ctx, "INTT1")

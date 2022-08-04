@@ -54,7 +54,7 @@ func Start(cfg config.Config, db database.Database) {
 			})
 			ctxTO, cancel := context.WithTimeout(context.Background(), time.Second*5)
 			defer cancel()
-			HandleWsMessage(ctxTO, message, ws, db)
+			HandleWsMessage(ctxTO, sessionID, message, ws, db)
 		}
 	}(ctx)
 

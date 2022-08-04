@@ -12,15 +12,15 @@ const (
 func (t Team) String() string {
 	switch t {
 	case RED_TEAM:
-		return "Red"
+		return "RED"
 	case BLUE_TEAM:
-		return "Blue"
+		return "BLUE"
 	case NEUTRAL_TEAM:
-		return "Neutral"
+		return "NEUTRAL"
 	case DEATH_TEAM:
-		return "Death"
+		return "DEATH"
 	default:
-		return "Unknown"
+		return "UNKNOWN"
 	}
 }
 

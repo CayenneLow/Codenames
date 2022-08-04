@@ -6,37 +6,44 @@ import (
 
 	"github.com/CayenneLow/Codenames/internal/config"
 	"github.com/CayenneLow/Codenames/internal/game/enum"
+	"github.com/CayenneLow/codenames-eventrouter/pkg/event"
 	"github.com/google/uuid"
 	"github.com/meirf/gopart"
 	log "github.com/sirupsen/logrus"
 )
 
 type GameState struct {
-	Config    config.Config
-	GameID    string
-	ClientIDs []uint32
-	CurrTeam  enum.Team
-	NGuess    int               // The number of guesses the current team has left
-	Remains   map[enum.Team]int // The number of cards remaining for each team
-	Board     Board
+	Config          config.Config
+	GameID          string
+	SessionIDToTeam map[string]enum.Team `json:"sessionIDToTeam"`
+	CurrTeam        enum.Team            `json:"currTeam"`
+	NGuess          int                  `json:"nGuess"`  // The number of guesses the current team has left
+	Remains         map[string]int       `json:"remains"` // The number of cards remaining for each team
+	Board           Board                `json:"board"`
 }
 
 func NewGame(cfg config.Config) GameState {
 	board, startingTeam := generateBoard(cfg)
-	remains := make(map[enum.Team](int))
-	remains[startingTeam] = cfg.NGuessStartingTeam
-	remains[startingTeam.Opposite()] = cfg.NGuessOtherTeams
+	remains := make(map[string](int))
+	// TODO: Need to change this logic if more than 2 teams
+	remains[startingTeam.String()] = cfg.NGuessStartingTeam
+	remains[startingTeam.Opposite().String()] = cfg.NGuessOtherTeams
 
 	gameState := GameState{
-		Config:    cfg,
-		GameID:    newGameId(),
-		ClientIDs: make([]uint32, 0),
-		CurrTeam:  startingTeam,
-		NGuess:    -1,
-		Remains:   remains,
-		Board:     board,
+		Config:          cfg,
+		GameID:          newGameId(),
+		SessionIDToTeam: make(map[string]enum.Team),
+		CurrTeam:        startingTeam,
+		NGuess:          -1,
+		Remains:         remains,
+		Board:           board,
 	}
 	return gameState
+}
+
+func (gs *GameState) Apply(e event.Event) error {
+	// Needs to handle: gameStateUpdate
+	return nil
 }
 
 func newGameId() string {
@@ -49,11 +56,11 @@ func (gs *GameState) Guess(row int, col int, team enum.Team) {
 	log.Debugf("Guessing cell: %v, %v for Game: %v", row, col, gs.GameID)
 	cell := &gs.Board.Cells[row][col]
 	cell.Guessed = true
-	if cell.Team == team {
+	if cell.Team == team.String() {
 		// TODO: A lot of work to be done, need to define a bunch of handlers
 		// Correct guess
 		gs.NGuess -= 1
-		gs.Remains[team] -= 1
+		gs.Remains[team.String()] -= 1
 
 	}
 }
@@ -76,7 +83,7 @@ func generateBoard(cfg config.Config) (Board, enum.Team) {
 	for key := range wordIndexes {
 		cell := Cell{
 			Word:    key,
-			Team:    enum.NEUTRAL_TEAM,
+			Team:    enum.NEUTRAL_TEAM.String(),
 			Guessed: false,
 		}
 		cells[i] = cell
@@ -107,8 +114,8 @@ func assignTeamToCells(cfg config.Config, nWords int, cellGrid [][]Cell, team en
 	i := 0
 	for i < nWords {
 		cellRow, cellCol := getRandCell(cfg)
-		if cellGrid[cellRow][cellCol].Team == enum.NEUTRAL_TEAM {
-			cellGrid[cellRow][cellCol].Team = team
+		if cellGrid[cellRow][cellCol].Team == enum.NEUTRAL_TEAM.String() {
+			cellGrid[cellRow][cellCol].Team = team.String()
 			i++
 		}
 	}

@@ -17,22 +17,25 @@ services:
       context: .    
     volumes:
       - ./internal/config/words.txt:/codenames/words.txt:ro
-    restart: always
+    restart: "no"
     depends_on:
       - redis
-      - redis-insight
+    networks:
+      - tests
 
   redis:
     image: redis:7.0.4-alpine
     restart: always
-    ports:
-      - "16379:6379"
+    networks:
+      - tests
 
   redis-insight:
     image: redislabs/redisinsight:latest
     restart: always
     ports:
       - "18001:8001"
+    networks:
+      - tests
 
   init-redis:
     depends_on:
@@ -42,3 +45,8 @@ services:
     volumes: 
       - ./internal/database/init_test/:/init_test/:ro
     command: sh -c "cat /init_test/test_data.txt | redis-cli -h redis -p 6379 --pipe"
+    networks:
+      - tests
+
+networks:
+  tests:
